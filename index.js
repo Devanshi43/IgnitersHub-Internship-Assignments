@@ -1,33 +1,98 @@
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+const path = require("path");
 const fs = require("fs");
-const input = fs.readFileSync("input.txt", "utf8");
 
-function calculate(expression) {
-    expression = expression.replace(/\^/g, "**");
-    expression = expression.replace(/×/g, "*");
-    expression = expression.replace(/÷/g, "/");
-    expression = expression.replace(/=$/, "").trim();
+dotenv.config();
 
-    return Function(`"use strict"; return (${expression})`)();
+
+const name = "Devanshi";
+const semester = "7th Semester";
+const branch = "B.Tech CSE";
+const rollNumber = "230180101016";
+
+
+const imagePath = path.join(__dirname, "attachment.jpg");
+
+
+if (!fs.existsSync(imagePath)) {
+    console.log("Image attachment not found!");
+    process.exit();
 }
 
-const expressions = input.split(/\r?\n/);
 
-let output = "";
+const allowedExtensions = [".png", ".jpg", ".jpeg"];
+const extension = path.extname(imagePath).toLowerCase();
 
-expressions.forEach((expression) => {
-    expression = expression.trim();
+if (!allowedExtensions.includes(extension)) {
+    console.log("Only PNG, JPG and JPEG images are allowed!");
+    process.exit();
+}
 
-    if (expression !== "") {
-        try {
-            const answer = calculate(expression);
-            output += `${expression} = ${answer}\n`;
-        } catch (error) {
-            output += `${expression} = Invalid Expression\n`;
-        }
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
-fs.writeFileSync("output.txt", output);
+const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_TO,
+    subject: "Challenge 3 Completed",
+    text: `
+Name: ${name}
+Semester: ${semester}
+Branch: ${branch}
+Roll Number: ${rollNumber}
 
-console.log("All expressions solved successfully!");
-console.log("Check output.txt for answers.");
+Please find the attached image.
+    `,
+    attachments: [
+        {
+            filename: path.basename(imagePath),
+            path: imagePath
+        }
+    ]
+};
+
+transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        console.log("Error sending email:", error.message);
+    } else {
+        console.log("Email sent successfully!");
+        console.log("Message:", info.response);
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
